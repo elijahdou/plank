@@ -38,7 +38,7 @@ extension ObjCModelRenderer {
         return ObjCIR.method("- (NSDictionary *)dictionaryObjectRepresentation") { [
             "NSMutableDictionary *\(dictionary) = " +
                 (self.isBaseClass ? "[[NSMutableDictionary alloc] initWithCapacity:\(self.properties.count)];" :
-                    "[[super dictionaryObjectRepresentation] mutableCopy];"),
+                    "[[super dictionaryRepresentation] mutableCopy];"),
             props,
         ] + boolProps + ["return \(dictionary);"] }
     }
@@ -111,7 +111,7 @@ extension ObjCFileRenderer {
         case .boolean, .float, .integer:
             return "[\(dictionary) setObject:@(\(propIVarName)) forKey: @\"\(param)\"];"
         case .object:
-            return "[\(dictionary) setObject:[\(propIVarName) dictionaryObjectRepresentation] forKey:@\"\(param)\"];"
+            return "[\(dictionary) setObject:[\(propIVarName) dictionaryRepresentation] forKey:@\"\(param)\"];"
         case .string(format: .none),
              .string(format: .some(.email)),
              .string(format: .some(.hostname)),

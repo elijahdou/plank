@@ -14,7 +14,7 @@ extension ObjCModelRenderer {
     func renderBuilderInitWithModel() -> ObjCIR.Method {
         return ObjCIR.method("- (instancetype)initWithModel:(\(className) *)modelObject") {
             [
-                "NSParameterAssert(modelObject);",
+                "NSParameterAssert(model);",
                 self.isBaseClass ? ObjCIR.ifStmt("!(self = [super init])") { ["return self;"] } :
                     "if (!(self = [super initWithModel:modelObject])) { return self; }",
                 "struct \(self.dirtyPropertyOptionName) \(self.dirtyPropertiesIVarName) = modelObject.\(self.dirtyPropertiesIVarName);",

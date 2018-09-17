@@ -49,7 +49,7 @@ extension ObjCFileRenderer {
             "NSUInteger subhashes[] = {",
             -->[propReturnStatements.joined(separator: ",\n")],
             "};",
-            "return PINIntegerArrayHash(subhashes, sizeof(subhashes) / sizeof(subhashes[0]));",
+            "return PUGIntegerArrayHash(subhashes, sizeof(subhashes) / sizeof(subhashes[0]));",
         ] }
     }
 
@@ -123,7 +123,6 @@ extension ObjCFileRenderer {
         let superInvocation = parentName(parentDescriptor).map { ["[super isEqualTo\($0):anObject]"] } ?? []
         return ObjCIR.method("- (BOOL)isEqualTo\(Languages.objectiveC.snakeCaseToCamelCase(rootSchema.name)):(\(className) *)anObject") {
             [
-                "return (",
                 -->[(["anObject != nil"] + superInvocation + propReturnStmts)
                     .map { "(\($0))" }.joined(separator: " &&\n")],
                 ");",

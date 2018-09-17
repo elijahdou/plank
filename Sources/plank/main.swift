@@ -10,6 +10,7 @@ import Foundation
 
 func handleProcess(processInfo: ProcessInfo) {
     let arguments = processInfo.arguments.dropFirst() // Drop executable name
+//    let arguments = ["--objc_class_prefix=PUG", "--no_runtime", "--no_recursive", "/Users/elijah/Workspace/company/tantan/pugdatamodel/json/liveModel.json"]
     handleGenerateCommand(withArguments: Array(arguments))
 }
 

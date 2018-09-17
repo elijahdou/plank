@@ -29,10 +29,10 @@ extension ObjCModelRenderer {
                     self.properties.map { (param, _) -> String in
                         "_\(dirtyPropertiesIVarName).\(dirtyPropertyOption(propertyName: param, className: self.className)) = [aDecoder decodeIntForKey:\((param + "_dirty_property").objcLiteral())] & 0x1;"
                     }.joined(separator: "\n"),
-
-                    ObjCIR.ifStmt("[self class] == [\(self.className) class]") {
-                        [renderPostInitNotification(type: "PlankModelInitTypeDefault")]
-                    },
+                    // 注释掉通知部分
+//                    ObjCIR.ifStmt("[self class] == [\(self.className) class]") {
+//                        [renderPostInitNotification(type: "PlankModelInitTypeDefault")]
+//                    },
                     "return self;",
                 ]
         }

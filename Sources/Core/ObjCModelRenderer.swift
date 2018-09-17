@@ -8,7 +8,7 @@
 
 import Foundation
 
-let rootNSObject = SchemaObjectRoot(name: "NSObject", properties: [:], extends: nil, algebraicTypeIdentifier: nil)
+let rootNSObject = SchemaObjectRoot(id: "", name: "NSObject", properties: [:], extends: nil, algebraicTypeIdentifier: nil)
 
 public struct ObjCModelRenderer: ObjCFileRenderer {
     let rootSchema: SchemaObjectRoot
@@ -36,6 +36,22 @@ public struct ObjCModelRenderer: ObjCFileRenderer {
     }
 
     // MARK: Model methods
+    
+    func renderSetupBitField() -> ObjCIR.Method {
+        let dirty = dirtyPropertiesIVarName
+        if self.isBaseClass {
+            return ObjCIR.method("- (void)setupBitFieldWithFlag:(BOOL)flag") {
+                ["NSInteger size = sizeof(_\(dirty));",
+                 "memset(&_\(dirty), flag ? 0xff : 0x00, size);"]
+            }
+        } else {
+            return ObjCIR.method("- (void)setupBitFieldWithFlag:(BOOL)flag") {
+                ["[super setupBitFieldWithFlag:flag];",
+                 "NSInteger size = sizeof(_\(dirty));",
+                 "memset(&_\(dirty), flag ? 0xff : 0x00, size);"]
+            }
+        }
+    }
 
     func renderClassName() -> ObjCIR.Method {
         return ObjCIR.method("+ (NSString *)className") {
@@ -69,7 +85,7 @@ public struct ObjCModelRenderer: ObjCFileRenderer {
     func renderMergeWithModelWithInitType() -> ObjCIR.Method {
         return ObjCIR.method("- (instancetype)mergeWithModel:(\(className) *)modelObject initType:(PlankModelInitType)initType") {
             [
-                "NSParameterAssert(modelObject);",
+                "NSParameterAssert(model);",
                 "\(self.builderClassName) *builder = [[\(self.builderClassName) alloc] initWithModel:self];",
                 "[builder mergeWithModel:modelObject];",
                 "return [[\(self.className) alloc] initWithBuilder:builder initType:initType];",
@@ -168,7 +184,7 @@ public struct ObjCModelRenderer: ObjCFileRenderer {
 
         let protocols: [String: [ObjCIR.Method]] = [
             "NSSecureCoding": [self.renderSupportsSecureCoding(), self.renderInitWithCoder(), self.renderEncodeWithCoder()],
-            "NSCopying": [ObjCIR.method("- (id)copyWithZone:(NSZone *)zone") { ["return self;"] }],
+//            "NSCopying": [ObjCIR.method("- (id)copyWithZone:(NSZone *)zone") { ["return self;"] }],
         ]
 
         let parentName = resolveClassName(parentDescriptor)

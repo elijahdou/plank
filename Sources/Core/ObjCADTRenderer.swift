@@ -28,7 +28,8 @@ extension ObjCModelRenderer {
             return mutableDict
         }
 
-        let root = SchemaObjectRoot(name: adtName,
+        let root = SchemaObjectRoot(id: rootSchema.id,
+                                    name: adtName,
                                     properties: properties,
                                     extends: nil,
                                     algebraicTypeIdentifier: nil)
@@ -129,7 +130,7 @@ struct ObjCADTRenderer: ObjCFileRenderer {
     func renderMatchFunction() -> ObjCIR.Method {
         let signatureComponents = dataTypes.enumerated().map { (index, prop) -> String in
             let (name, arg) = renderArgName(schema: prop.schema)
-            return "\(index == 0 ? "match" : "or")\(name):(nullable PLANK_NOESCAPE void (^)(\(self.typeFromSchema(name, prop)) \(arg)))\(arg)MatchHandler"
+            return "\(index == 0 ? "match" : "or")\(name):(nullable PUG_NOESCAPE void (^)(\(self.typeFromSchema(name, prop)) \(arg)))\(arg)MatchHandler"
         }
 
         return ObjCIR.method("- (void)\(signatureComponents.joined(separator: " "))") { [

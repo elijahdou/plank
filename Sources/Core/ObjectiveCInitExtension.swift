@@ -8,7 +8,7 @@
 
 import Foundation
 
-let dateValueTransformerKey = "kPlankDateValueTransformerKey"
+let dateValueTransformerKey = "kPUGDateValueTransformerKey"
 
 extension ObjCFileRenderer {
     func renderPostInitNotification(type: String) -> String {
@@ -18,8 +18,8 @@ extension ObjCFileRenderer {
 
 extension ObjCModelRenderer {
     func renderModelObjectWithDictionary() -> ObjCIR.Method {
-        return ObjCIR.method("+ (instancetype)modelObjectWithDictionary:(NSDictionary *)dictionary") {
-            ["return [[self alloc] initWithModelDictionary:dictionary];"]
+        return ObjCIR.method("+ (instancetype)modelWithDictionary:(NSDictionary *)dictionary") {
+            ["return [[self alloc] initWithDictionary:dictionary];"]
         }
     }
 
@@ -336,9 +336,9 @@ extension ObjCModelRenderer {
                         ] },
                     ] }
                 }.joined(separator: "\n"),
-                ObjCIR.ifStmt("[self class] == [\(self.className) class]") {
-                    [renderPostInitNotification(type: "PlankModelInitTypeDefault")]
-                },
+//                ObjCIR.ifStmt("[self class] == [\(self.className) class]") {
+//                    [renderPostInitNotification(type: "PlankModelInitTypeDefault")]
+//                },
                 "return self;",
             ]
         }

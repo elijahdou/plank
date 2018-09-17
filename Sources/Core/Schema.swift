@@ -132,6 +132,7 @@ extension Schema {
 }
 
 public struct SchemaObjectRoot: Hashable {
+    let id: String
     let name: String
     let properties: [String: SchemaObjectProperty]
     let extends: URLSchemaReference?
@@ -351,7 +352,10 @@ extension Schema {
                                 })
                             }
                         }
-                    return lifted.map { Schema.object(SchemaObjectRoot(name: objectTitle,
+                    var id: String = propertyInfo["id"] as? String ?? ""
+                    id = (id as NSString).deletingPathExtension as String
+                    return lifted.map { Schema.object(SchemaObjectRoot(id: id,
+                                                                       name: objectTitle,
                                                                        properties: Dictionary(elements: $0),
                                                                        extends: extends,
                                                                        algebraicTypeIdentifier: propertyInfo["algebraicDataTypeIdentifier"] as? String)) }
