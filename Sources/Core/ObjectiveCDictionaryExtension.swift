@@ -24,10 +24,10 @@ extension ObjCModelRenderer {
                 ]}
             ]}
         }.joined(separator: "\n")
-        return ObjCIR.method("- (NSDictionary *)dictionaryObjectRepresentation") {[
+        return ObjCIR.method("- (NSDictionary *)dictionaryRepresentation") {[
             "NSMutableDictionary *\(dictionary) = " +
                 (self.isBaseClass ? "[[NSMutableDictionary alloc] initWithCapacity:\(self.properties.count)];" :
-                    "[[super dictionaryObjectRepresentation] mutableCopy];"),
+                    "[[super dictionaryRepresentation] mutableCopy];"),
             props,
             "return \(dictionary);"
         ]}
@@ -101,7 +101,7 @@ extension ObjCFileRenderer {
         case .boolean, .float, .integer:
             return "[\(dictionary) setObject:@(\(propIVarName)) forKey: @\"\(param)\"];"
         case .object:
-            return "[\(dictionary) setObject:[\(propIVarName) dictionaryObjectRepresentation] forKey:@\"\(param)\"];"
+            return "[\(dictionary) setObject:[\(propIVarName) dictionaryRepresentation] forKey:@\"\(param)\"];"
         case .string(format: .none),
              .string(format: .some(.email)),
              .string(format: .some(.hostname)),
@@ -134,7 +134,7 @@ extension ObjCFileRenderer {
             func createCollection(destCollection: String, processObject: String, collectionSchema: Schema, collectionCounter: Int = 0) -> String {
                 switch collectionSchema {
                 case .reference, .object, .oneOf(types: _):
-                    return "[\(destCollection) addObject:[\(processObject) dictionaryObjectRepresentation]];"
+                    return "[\(destCollection) addObject:[\(processObject) dictionaryRepresentation]];"
                 case .array(itemType: let type), .set(itemType: let type):
                     let currentResult = "result\(collectionCounter)"
                     let parentResult = "result\(collectionCounter-1)"
@@ -219,8 +219,8 @@ extension ObjCFileRenderer {
                 return "[\(dictionary) setObject:\(propIVarName) forKey:@\"\(param)\"];"
             }
         case .oneOf(types: _):
-            // oneOf (ADT) types have a dictionaryObjectRepresentation method we will use here
-            return "[\(dictionary) setObject:[\(propIVarName) dictionaryObjectRepresentation] forKey:@\"\(param)\"];"
+            // oneOf (ADT) types have a dictionaryRepresentation method we will use here
+            return "[\(dictionary) setObject:[\(propIVarName) dictionaryRepresentation] forKey:@\"\(param)\"];"
         case .reference(with: let ref):
             return ref.force().map {
                 renderAddToDictionaryStatement(paramWrapped, $0, dictionary)

@@ -47,7 +47,7 @@ extension ObjCFileRenderer {
             "NSUInteger subhashes[] = {",
             -->[propReturnStatements.joined(separator: ",\n")],
             "};",
-            "return PINIntegerArrayHash(subhashes, sizeof(subhashes) / sizeof(subhashes[0]));"
+            "return PUGIntegerArrayHash(subhashes, sizeof(subhashes) / sizeof(subhashes[0]));"
         ]}
     }
 

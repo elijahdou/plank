@@ -8,7 +8,7 @@
 
 import Foundation
 
-let dateValueTransformerKey = "kPlankDateValueTransformerKey"
+let dateValueTransformerKey = "kPUGDateValueTransformerKey"
 
 extension ObjCFileRenderer {
     func renderPostInitNotification(type: String) -> String {
@@ -19,15 +19,16 @@ extension ObjCFileRenderer {
 extension ObjCModelRenderer {
 
     func renderModelObjectWithDictionary() -> ObjCIR.Method {
-        return ObjCIR.method("+ (instancetype)modelObjectWithDictionary:(NSDictionary *)dictionary") {
-            ["return [[self alloc] initWithModelDictionary:dictionary];"]
+        return ObjCIR.method("+ (instancetype)modelWithDictionary:(NSDictionary *)dictionary") {
+            ["return [[self alloc] initWithDictionary:dictionary];"]
         }
     }
 
     func renderDesignatedInit() -> ObjCIR.Method {
         return ObjCIR.method("- (instancetype)init") {
             [
-                "return [self initWithModelDictionary:@{}];"
+                "NSAssert(NO, @\"do not use this init method\");",
+                "return nil;"
             ]
         }
     }
@@ -36,7 +37,13 @@ extension ObjCModelRenderer {
         return ObjCIR.method("- (instancetype)initWithBuilder:(\(builderClassName) *)builder") {
             [
                 "NSParameterAssert(builder);",
-                "return [self initWithBuilder:builder initType:PlankModelInitTypeDefault];"
+                self.isBaseClass ? ObjCIR.ifStmt("!(self = [super init])") { ["return self;"] } :
+                    ObjCIR.ifStmt("!(self = [super initWithBuilder:builder])") { ["return self;"] },
+                self.properties.map { (name, _) in
+                    "_\(name.snakeCaseToPropertyName()) = builder.\(name.snakeCaseToPropertyName());"
+                    }.joined(separator: "\n"),
+                "_\(self.dirtyPropertiesIVarName) = builder.\(self.dirtyPropertiesIVarName);",
+                "return self;"
             ]
         }
     }
@@ -150,7 +157,7 @@ extension ObjCModelRenderer {
             case .string(format: .some(.uri)):
                 return ["\(propertyToAssign) = [NSURL URLWithString:\(rawObjectName)];"]
             case .string(format: .some(.dateTime)):
-                return ["\(propertyToAssign) = [[NSValueTransformer valueTransformerForName:\(dateValueTransformerKey)] transformedValue:\(rawObjectName)];"]
+                return ["\(propertyToAssign) = [NSDate dateWithString:\(rawObjectName)];"]
             case .reference(with: let ref):
                 return ref.force().map {
                     renderPropertyInit(propertyToAssign, rawObjectName, schema: $0, firstName: firstName, counter: counter)
@@ -163,7 +170,7 @@ extension ObjCModelRenderer {
             case .enumT(.string(let variants)):
                 return ["\(propertyToAssign) = \(enumFromStringMethodName(propertyName: firstName, className: className))(value);"]
             case .object(let objectRoot):
-                return ["\(propertyToAssign) = [\(objectRoot.className(with: self.params)) modelObjectWithDictionary:\(rawObjectName)];"]
+                return ["\(propertyToAssign) = [[\(objectRoot.className(with: self.params)) alloc] initWithDictionary:\(rawObjectName)];"]
             case .oneOf(types: let schemas):
                 // TODO Update to create ADT objects
                 let adtClassName = self.typeFromSchema(firstName, schema.nonnullProperty()).trimmingCharacters(in: CharacterSet(charactersIn: "*"))
@@ -184,7 +191,7 @@ extension ObjCModelRenderer {
                     switch schema {
                     case .object(let objectRoot):
                         return ObjCIR.ifStmt("[\(rawObjectName) isKindOfClass:[NSDictionary class]] && [\(rawObjectName)[\("type".objcLiteral())] isEqualToString:\(objectRoot.typeIdentifier.objcLiteral())]") {
-                            transformToADTInit(["\(propertyToAssign) = [\(objectRoot.className(with: self.params)) modelObjectWithDictionary:\(rawObjectName)];"])
+                            transformToADTInit(["\(propertyToAssign) = [[\(objectRoot.className(with: self.params)) alloc] initWithDictionary:\(rawObjectName)];"])
                         }
                     case .reference(with: let ref):
                         return ref.force().map(loop) ?? {
@@ -236,7 +243,7 @@ extension ObjCModelRenderer {
                             return transformToADTInit(renderPropertyInit(propertyToAssign, rawObjectName, schema: schema, firstName: firstName, counter: counter))
                         }
                     case .string(.some(.dateTime)):
-                        return ObjCIR.ifStmt("[\(rawObjectName) isKindOfClass:[NSString class]] && [[NSValueTransformer valueTransformerForName:\(dateValueTransformerKey)] transformedValue:\(rawObjectName)] != nil") {
+                        return ObjCIR.ifStmt("[\(rawObjectName) isKindOfClass:[NSString class]]") {
                             return transformToADTInit(renderPropertyInit(propertyToAssign, rawObjectName, schema: schema, firstName: firstName, counter: counter))
                         }
                     case .string(.some), .string(.none), .enumT(.string):
@@ -259,15 +266,15 @@ extension ObjCModelRenderer {
             }
         }
 
-        return ObjCIR.method("- (instancetype)initWithModelDictionary:(NS_VALID_UNTIL_END_OF_SCOPE NSDictionary *)modelDictionary") {
+        return ObjCIR.method("- (instancetype)initWithDictionary:(NS_VALID_UNTIL_END_OF_SCOPE NSDictionary *)dictionary") {
             return [
-                "NSParameterAssert(modelDictionary);",
-                ObjCIR.ifStmt("!modelDictionary") { ["return self;"] },
+                "NSParameterAssert(dictionary);",
+                ObjCIR.ifStmt("!dictionary") { ["return self;"] },
                 self.isBaseClass ? ObjCIR.ifStmt("!(self = [super init])") { ["return self;"] } :
-                "if (!(self = [super initWithModelDictionary:modelDictionary])) { return self; }",
+                "if (!(self = [super initWithDictionary:dictionary])) { return self; }",
                 -->self.properties.map { (name, prop) in
                     ObjCIR.scope {[
-                        "__unsafe_unretained id value = modelDictionary[\(name.objcLiteral())]; // Collection will retain.",
+                        "__unsafe_unretained id value = dictionary[\(name.objcLiteral())]; // Collection will retain.",
                         ObjCIR.ifStmt("value != nil") {[
                             ObjCIR.ifStmt("value != (id)kCFNull") {
                                 renderPropertyInit("self->_\(name.snakeCaseToPropertyName())", "value", schema: prop.schema, firstName: name)
@@ -276,9 +283,9 @@ extension ObjCModelRenderer {
                         ]}
                     ]}
                 },
-                ObjCIR.ifStmt("[self class] == [\(self.className) class]") {
-                    [renderPostInitNotification(type: "PlankModelInitTypeDefault")]
-                },
+//                ObjCIR.ifStmt("[self class] == [\(self.className) class]") {
+//                    [renderPostInitNotification(type: "PlankModelInitTypeDefault")]
+//                },
                 "return self;"
             ]
         }

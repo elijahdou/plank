@@ -21,9 +21,9 @@ extension ObjCModelRenderer {
                     "_\(dirtyPropertiesIVarName).\(dirtyPropertyOption(propertyName: param, className: self.className)) = [aDecoder decodeIntForKey:\((param + "_dirty_property").objcLiteral())] & 0x1;"
                     }.joined(separator: "\n"),
 
-                ObjCIR.ifStmt("[self class] == [\(self.className) class]") {
-                    [renderPostInitNotification(type: "PlankModelInitTypeDefault")]
-                },
+//                ObjCIR.ifStmt("[self class] == [\(self.className) class]") {
+//                    [renderPostInitNotification(type: "PlankModelInitTypeDefault")]
+//                },
                 "return self;"
             ]
         }

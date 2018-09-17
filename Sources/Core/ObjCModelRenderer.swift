@@ -28,6 +28,22 @@ public struct ObjCModelRenderer: ObjCFileRenderer {
     }
 
     // MARK: Model methods
+    
+    func renderSetupBitField() -> ObjCIR.Method {
+        let dirty = dirtyPropertiesIVarName
+        if self.isBaseClass {
+            return ObjCIR.method("- (void)setupBitFieldWithFlag:(BOOL)flag") {
+                ["NSInteger size = sizeof(_\(dirty));",
+                 "memset(&_\(dirty), flag ? 0xff : 0x00, size);"]
+            }
+        } else {
+            return ObjCIR.method("- (void)setupBitFieldWithFlag:(BOOL)flag") {
+                ["[super setupBitFieldWithFlag:flag];",
+                 "NSInteger size = sizeof(_\(dirty));",
+                 "memset(&_\(dirty), flag ? 0xff : 0x00, size);"]
+            }
+        }
+    }
 
     func renderClassName() -> ObjCIR.Method {
         return ObjCIR.method("+ (NSString *)className") {
@@ -42,7 +58,7 @@ public struct ObjCModelRenderer: ObjCFileRenderer {
     }
 
     func renderCopyWithBlock() -> ObjCIR.Method {
-        return ObjCIR.method("- (instancetype)copyWithBlock:(PLANK_NOESCAPE void (^)(\(self.builderClassName) *builder))block") {
+        return ObjCIR.method("- (instancetype)copyWithBlock:(PUG_NOESCAPE void (^)(\(self.builderClassName) *builder))block") {
             [
                 "NSParameterAssert(block);",
                 "\(self.builderClassName) *builder = [[\(self.builderClassName) alloc] initWithModel:self];",
@@ -53,17 +69,22 @@ public struct ObjCModelRenderer: ObjCFileRenderer {
     }
 
     func renderMergeWithModel() -> ObjCIR.Method {
-        return ObjCIR.method("- (instancetype)mergeWithModel:(\(self.className) *)modelObject") {
-            ["return [self mergeWithModel:modelObject initType:PlankModelInitTypeFromMerge];"]
+        return ObjCIR.method("- (instancetype)mergeWithModel:(\(self.className) *)model") {
+            [
+                "NSParameterAssert(model);",
+                "\(self.builderClassName) *builder = [[\(self.builderClassName) alloc] initWithModel:self];",
+                "[builder mergeWithModel:model];",
+                "return [[\(self.className) alloc] initWithBuilder:builder];"
+            ]
         }
     }
 
     func renderMergeWithModelWithInitType() -> ObjCIR.Method {
-        return ObjCIR.method("- (instancetype)mergeWithModel:(\(self.className) *)modelObject initType:(PlankModelInitType)initType") {
+        return ObjCIR.method("- (instancetype)mergeWithModel:(\(self.className) *)model initType:(PlankModelInitType)initType") {
             [
-                "NSParameterAssert(modelObject);",
+                "NSParameterAssert(model);",
                 "\(self.builderClassName) *builder = [[\(self.builderClassName) alloc] initWithModel:self];",
-                "[builder mergeWithModel:modelObject];",
+                "[builder mergeWithModel:model];",
                 "return [[\(self.className) alloc] initWithBuilder:builder initType:initType];"
             ]
         }
@@ -117,7 +138,27 @@ public struct ObjCModelRenderer: ObjCFileRenderer {
 
         let protocols: [String: [ObjCIR.Method]] = [
             "NSSecureCoding": [self.renderSupportsSecureCoding(), self.renderInitWithCoder(), self.renderEncodeWithCoder()],
-            "NSCopying": [ObjCIR.method("- (id)copyWithZone:(NSZone *)zone") { ["return self;"] }]
+//            "NSCopying": [ObjCIR.method("- (id)copyWithZone:(NSZone *)zone") { ["return self;"] }],
+            "TXTDBTableProtocol": [
+                ObjCIR.method("""
+TXTDBImplementionORM
+
++ (NSString *)tableName
+""") { ["return <#(nil)#>;"] },
+                ObjCIR.method("+ (void)implementAttribute") { ["<#(nil)#>"] },
+                ObjCIR.method("+ (void)implementAttributeConstraint") { ["<#(nil)#>"] },
+                ObjCIR.method("+ (void)implementAttributeIndex") { ["<#(nil)#>"] },
+                ObjCIR.method("+ (void)implementRelation") { ["<#(nil)#>"] },
+                ObjCIR.method("+ (void)implementRelationConstraint") { ["<#(nil)#>"] },
+                ObjCIR.method("+ (void)implementRelationIndex") { ["<#(nil)#>"] },
+                ObjCIR.method("- (void)didProcessData") { ["return [self setupBitFieldWithFlag:YES];"] },
+                ObjCIR.method("+ (NSString *)envelopeKey") { ["<#(nil)#>"] },
+                ObjCIR.method("+ (BOOL)needBindRelation") { ["<#(nil)#>"] },
+                ObjCIR.method("- (id)bindRelationWithenvelopeData:(PUGEnvelopeData *)envelopeData sourceData:(NSDictionary *)source") { ["<#(nil)#>"] },
+                ObjCIR.method("- (NSString *)modelIdentifier") { ["return <#(nil)#>"] },
+                ObjCIR.method("- (id<ConsistencyManagerModel>)map:(id<ConsistencyManagerModel>  _Nullable (^)(id<ConsistencyManagerModel> _Nonnull)) PUG_NOESCAPE transform") { ["<#(nil)#>"] },
+                ObjCIR.method("- (void)forEach:(void (^)(id<ConsistencyManagerModel> _Nonnull)) PUG_NOESCAPE visit") { ["<#(nil)#>"] }
+            ]
         ]
 
         let parentName = resolveClassName(self.parentDescriptor)
@@ -198,21 +239,22 @@ public struct ObjCModelRenderer: ObjCFileRenderer {
                 name: self.className,
                 extends: parentName,
                 methods: [
-                    (self.isBaseClass ? .publicM : .privateM, self.renderClassName()),
-                    (self.isBaseClass ? .publicM : .privateM, self.renderPolymorphicTypeIdentifier()),
-                    (self.isBaseClass ? .publicM : .privateM, self.renderModelObjectWithDictionary()),
-                    (.privateM, self.renderDesignatedInit()),
+                    (self.isBaseClass ? .publicM : .privateM, self.renderSetupBitField()),
+//                    (self.isBaseClass ? .publicM : .privateM, self.renderClassName()),
+//                    (self.isBaseClass ? .publicM : .privateM, self.renderPolymorphicTypeIdentifier()),
+//                    (self.isBaseClass ? .publicM : .privateM, self.renderModelObjectWithDictionary()),
+//                    (.privateM, self.renderDesignatedInit()),
                     (self.isBaseClass ? .publicM : .privateM, self.renderInitWithModelDictionary()),
                     (.publicM, self.renderInitWithBuilder()),
-                    (self.isBaseClass ? .publicM : .privateM, self.renderInitWithBuilderWithInitType()),
+//                    (self.isBaseClass ? .publicM : .privateM, self.renderInitWithBuilderWithInitType()),
                     (.privateM, self.renderDebugDescription()),
                     (.publicM, self.renderCopyWithBlock()),
                     (.privateM, self.renderIsEqual()),
                     (.publicM, self.renderIsEqualToClass()),
                     (.privateM, self.renderHash()),
                     (.publicM, self.renderMergeWithModel()),
-                    (.publicM, self.renderMergeWithModelWithInitType()),
-                    (self.isBaseClass ? .publicM : .privateM, self.renderGenerateDictionary())
+//                    (.publicM, self.renderMergeWithModelWithInitType()),
+//                    (self.isBaseClass ? .publicM : .privateM, self.renderGenerateDictionary())
                 ],
                 properties: properties.map { param, prop in (param, typeFromSchema(param, prop), prop, .readonly) },
                 protocols: protocols

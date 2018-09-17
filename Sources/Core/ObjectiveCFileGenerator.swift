@@ -85,25 +85,25 @@ struct ObjCRuntimeFile {
         return [
             ObjCIR.Root.macro([
                 "#if __has_attribute(noescape)",
-                "   #define PLANK_NOESCAPE __attribute__((noescape))",
+                "   #define PUG_NOESCAPE __attribute__((noescape))",
                 "#else",
-                "   #define PLANK_NOESCAPE",
+                "   #define PUG_NOESCAPE",
                 "#endif"
                 ].joined(separator: "\n")),
 
-            ObjCIR.Root.optionSetEnum(
-                name: "PlankModelInitType",
-                values: [
-                    EnumValue<Int>(defaultValue: 0, description: "Default"),
-                    EnumValue<Int>(defaultValue: 1, description: "FromMerge"),
-                    EnumValue<Int>(defaultValue: 2, description: "FromSubmerge")
-                ]
-            ),
+//            ObjCIR.Root.optionSetEnum(
+//                name: "PlankModelInitType",
+//                values: [
+//                    EnumValue<Int>(defaultValue: 0, description: "Default"),
+//                    EnumValue<Int>(defaultValue: 1, description: "FromMerge"),
+//                    EnumValue<Int>(defaultValue: 2, description: "FromSubmerge")
+//                ]
+//            ),
             // TODO Add another root for constant variables instead of using Macro
             ObjCIR.Root.macro("NS_ASSUME_NONNULL_BEGIN"),
-            ObjCIR.Root.macro("static NSValueTransformerName const kPlankDateValueTransformerKey = @\"kPlankDateValueTransformerKey\";"),
-            ObjCIR.Root.macro("static NSNotificationName const kPlankDidInitializeNotification = @\"kPlankDidInitializeNotification\";"),
-            ObjCIR.Root.macro("static NSString *const kPlankInitTypeKey = @\"kPlankInitTypeKey\";"),
+//            ObjCIR.Root.macro("static NSValueTransformerName const kPUGDateValueTransformerKey = @\"kPUGDateValueTransformerKey\";"),
+//            ObjCIR.Root.macro("static NSNotificationName const kPlankDidInitializeNotification = @\"kPlankDidInitializeNotification\";"),
+//            ObjCIR.Root.macro("static NSString *const kPlankInitTypeKey = @\"kPlankInitTypeKey\";"),
             ObjCIR.Root.function(
                 ObjCIR.method("NSString *debugDescriptionForFields(NSArray *descriptionFields)") {[
                     "NSMutableString *stringBuf = [NSMutableString string];",
@@ -129,7 +129,7 @@ struct ObjCRuntimeFile {
                 ]}
             ),
             ObjCIR.Root.function(
-                ObjCIR.method("NSUInteger PINIntegerArrayHash(const NSUInteger *subhashes, NSUInteger count)") {
+                ObjCIR.method("NSUInteger PUGIntegerArrayHash(const NSUInteger *subhashes, NSUInteger count)") {
                     [
                         "uint64_t result = subhashes[0];",
                         "for (uint64_t ii = 1; ii < count; ++ii) {",
@@ -154,7 +154,7 @@ struct ObjCRuntimeFile {
 
 struct ObjCRuntimeHeaderFile: FileGenerator {
     var fileName: String {
-        return "PlankModelRuntime.h"
+        return "PUGModelRuntime.h"
     }
 
     var indent: Int {
@@ -172,7 +172,7 @@ struct ObjCRuntimeHeaderFile: FileGenerator {
 
 struct ObjCRuntimeImplementationFile: FileGenerator {
     var fileName: String {
-        return "PlankModelRuntime.m"
+        return "PUGModelRuntime.m"
     }
 
     var indent: Int {

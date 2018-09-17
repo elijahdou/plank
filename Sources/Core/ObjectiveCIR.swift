@@ -305,7 +305,8 @@ public struct ObjCIR {
                 return [
                     "#import <Foundation/Foundation.h>",
                     parentName.map(ObjCIR.fileImportStmt) ?? "",
-                    "#import \"\(ObjCRuntimeHeaderFile().fileName)\""
+                    "#import \"\(ObjCRuntimeHeaderFile().fileName)\"",
+                    "#import <TXTDB/TXTDBORMHeader.h>",
                 ].filter { $0 != "" }  + (["\(myName)Builder"] + classNames)
                     .sorted().map { "@class \($0.trimmingCharacters(in: .whitespaces));" }
             case .classDecl(let className, let extends, let methods, let properties, let protocols):
