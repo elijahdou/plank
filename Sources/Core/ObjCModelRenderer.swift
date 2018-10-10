@@ -139,26 +139,26 @@ public struct ObjCModelRenderer: ObjCFileRenderer {
         let protocols: [String: [ObjCIR.Method]] = [
             "NSSecureCoding": [self.renderSupportsSecureCoding(), self.renderInitWithCoder(), self.renderEncodeWithCoder()],
 //            "NSCopying": [ObjCIR.method("- (id)copyWithZone:(NSZone *)zone") { ["return self;"] }],
-            "TXTDBTableProtocol": [
-                ObjCIR.method("""
-TXTDBImplementionORM
-
-+ (NSString *)tableName
-""") { ["return <#(nil)#>;"] },
-                ObjCIR.method("+ (void)implementAttribute") { ["<#(nil)#>"] },
-                ObjCIR.method("+ (void)implementAttributeConstraint") { ["<#(nil)#>"] },
-                ObjCIR.method("+ (void)implementAttributeIndex") { ["<#(nil)#>"] },
-                ObjCIR.method("+ (void)implementRelation") { ["<#(nil)#>"] },
-                ObjCIR.method("+ (void)implementRelationConstraint") { ["<#(nil)#>"] },
-                ObjCIR.method("+ (void)implementRelationIndex") { ["<#(nil)#>"] },
-                ObjCIR.method("- (void)didProcessData") { ["return [self setupBitFieldWithFlag:YES];"] },
-                ObjCIR.method("+ (NSString *)envelopeKey") { ["<#(nil)#>"] },
-                ObjCIR.method("+ (BOOL)needBindRelation") { ["<#(nil)#>"] },
-                ObjCIR.method("- (id)bindRelationWithenvelopeData:(PUGEnvelopeData *)envelopeData sourceData:(NSDictionary *)source") { ["<#(nil)#>"] },
-                ObjCIR.method("- (NSString *)modelIdentifier") { ["return <#(nil)#>"] },
-                ObjCIR.method("- (id<ConsistencyManagerModel>)map:(id<ConsistencyManagerModel>  _Nullable (^)(id<ConsistencyManagerModel> _Nonnull)) PUG_NOESCAPE transform") { ["<#(nil)#>"] },
-                ObjCIR.method("- (void)forEach:(void (^)(id<ConsistencyManagerModel> _Nonnull)) PUG_NOESCAPE visit") { ["<#(nil)#>"] }
-            ]
+//            "TXTDBTableProtocol": [
+//                ObjCIR.method("""
+//TXTDBImplementionORM
+//
+//+ (NSString *)tableName
+//""") { ["return <#(nil)#>;"] },
+//                ObjCIR.method("+ (void)implementAttribute") { ["<#(nil)#>"] },
+//                ObjCIR.method("+ (void)implementAttributeConstraint") { ["<#(nil)#>"] },
+//                ObjCIR.method("+ (void)implementAttributeIndex") { ["<#(nil)#>"] },
+//                ObjCIR.method("+ (void)implementRelation") { ["<#(nil)#>"] },
+//                ObjCIR.method("+ (void)implementRelationConstraint") { ["<#(nil)#>"] },
+//                ObjCIR.method("+ (void)implementRelationIndex") { ["<#(nil)#>"] },
+//                ObjCIR.method("- (void)didProcessData") { ["return [self setupBitFieldWithFlag:YES];"] },
+//                ObjCIR.method("+ (NSString *)envelopeKey") { ["<#(nil)#>"] },
+//                ObjCIR.method("+ (BOOL)needBindRelation") { ["<#(nil)#>"] },
+//                ObjCIR.method("- (id)bindRelationWithenvelopeData:(PUGEnvelopeData *)envelopeData sourceData:(NSDictionary *)source") { ["<#(nil)#>"] },
+//                ObjCIR.method("- (NSString *)modelIdentifier") { ["return <#(nil)#>"] },
+//                ObjCIR.method("- (id<ConsistencyManagerModel>)map:(id<ConsistencyManagerModel>  _Nullable (^)(id<ConsistencyManagerModel> _Nonnull)) PUG_NOESCAPE transform") { ["<#(nil)#>"] },
+//                ObjCIR.method("- (void)forEach:(void (^)(id<ConsistencyManagerModel> _Nonnull)) PUG_NOESCAPE visit") { ["<#(nil)#>"] }
+//            ]
         ]
 
         let parentName = resolveClassName(self.parentDescriptor)
