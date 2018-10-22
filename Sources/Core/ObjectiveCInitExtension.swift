@@ -27,8 +27,7 @@ extension ObjCModelRenderer {
     func renderDesignatedInit() -> ObjCIR.Method {
         return ObjCIR.method("- (instancetype)init") {
             [
-                "NSAssert(NO, @\"do not use this init method\");",
-                "return nil;"
+                "return [self initWithModelDictionary:@{}];"
             ]
         }
     }
@@ -67,6 +66,12 @@ extension ObjCModelRenderer {
     }
 
     public func renderInitWithModelDictionary() -> ObjCIR.Method {
+        if !self.isBaseClass {
+            return ObjCIR.method("", body: { () -> [String] in
+                return []
+            })
+        }
+        
         func renderPropertyInit(
             _ propertyToAssign: String,
             _ rawObjectName: String,

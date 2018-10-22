@@ -268,6 +268,9 @@ public struct ObjCIR {
         let signature: String
 
         func render() -> [String] {
+            if signature.count < 1 {
+                return []
+            }
             return [
                 signature,
                 "{",
@@ -305,7 +308,7 @@ public struct ObjCIR {
                 return [
                     "#import <Foundation/Foundation.h>",
                     parentName.map(ObjCIR.fileImportStmt) ?? "",
-                    "#import \"\(ObjCRuntimeHeaderFile().fileName)\"",
+                    "#import \"\(ObjCRuntimeHeaderFile().fileName)\""
                 ].filter { $0 != "" }  + (["\(myName)Builder"] + classNames)
                     .sorted().map { "@class \($0.trimmingCharacters(in: .whitespaces));" }
             case .classDecl(let className, let extends, let methods, let properties, let protocols):
