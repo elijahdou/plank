@@ -111,10 +111,15 @@ extension ObjCFileRenderer {
         let superInvocation = parentName(self.parentDescriptor).map { ["[super isEqualTo\($0):anObject]"] } ?? []
         return ObjCIR.method("- (BOOL)isEqualTo\(self.rootSchema.name.snakeCaseToCamelCase()):(\(self.className) *)anObject") {
             [
-                "return (",
                 -->[(["anObject != nil"] + superInvocation + propReturnStmts)
-                    .map { "(\($0))" }.joined(separator: " &&\n")],
-                ");"
+                    .map {
+                        """
+                        if (!(\($0))) {
+                            return NO;
+                        }
+                        """
+                    }.joined(separator: "\n")],
+                "return YES;"
             ]
         }
     }
