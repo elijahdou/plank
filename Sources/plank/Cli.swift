@@ -132,7 +132,7 @@ func handleGenerateCommand(withArguments arguments: [String]) {
         return
     }
     
-    if flags[.version] != nil{
+    if flags[.version] != nil {
 	    handleVersionCommand()
 	    return
     }
@@ -172,7 +172,7 @@ func handleGenerateCommand(withArguments arguments: [String]) {
     if let executionPath = ProcessInfo.processInfo.environment["PWD"] {
         // What directory path is the user in when invoke Plank
         outputDirectory = URL(string: executionPath)
-        if output_dir.count > 0 {
+        if !output_dir.isEmpty {
             if output_dir.hasPrefix("/") {
                 // Absolute file URL
                 outputDirectory = URL(string: output_dir)!
@@ -188,12 +188,12 @@ func handleGenerateCommand(withArguments arguments: [String]) {
 
     let urls = args.map { URL(string: $0)! }
     let languages: [Languages] = flags[.lang]?.trimmingCharacters(in: .whitespaces).components(separatedBy: ",").compactMap {
-        guard let lang = Languages.init(rawValue: $0) else {
+        guard let lang = Languages(rawValue: $0) else {
             fatalError("Invalid or unsupported language: \($0)")
         }
         return lang
         } ?? [.objectiveC]
-    guard languages.count > 0 else {
+    guard !languages.isEmpty else {
         fatalError("Unsupported value for lang: \"\(String(describing: flags[.lang]))\"")
     }
 

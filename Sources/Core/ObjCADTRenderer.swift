@@ -28,12 +28,12 @@ extension ObjCModelRenderer {
             mutableDict[type.0] = type.1
             return mutableDict
         })
-
-        let root = SchemaObjectRoot(name: adtName,
+        let root = SchemaObjectRoot(fd: rootSchema.fd,
+                                    name: adtName,
                                     properties: properties,
                                     extends: nil,
                                     algebraicTypeIdentifier: nil)
-        return ObjCADTRenderer.init(rootSchema: root,
+        return ObjCADTRenderer(rootSchema: root,
                                         params: self.params,
                                         dataTypes: schemas).renderRoots()
     }

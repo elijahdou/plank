@@ -8,7 +8,7 @@
 
 import Foundation
 
-let rootNSObject = SchemaObjectRoot(name: "NSObject", properties: [:], extends: nil, algebraicTypeIdentifier: nil)
+let rootNSObject = SchemaObjectRoot(fd: "", name: "NSObject", properties: [:], extends: nil, algebraicTypeIdentifier: nil)
 
 public struct ObjCModelRenderer: ObjCFileRenderer {
     let rootSchema: SchemaObjectRoot
@@ -208,13 +208,15 @@ public struct ObjCModelRenderer: ObjCFileRenderer {
 
         return [
             ObjCIR.Root.imports(
-                classNames: Set(self.renderReferencedClasses().map {
+                classNames: Set(renderReferencedClasses().map {
                     // Objective-C types contain "*" if they are a pointer type
                     // This information is excessive for import statements so
                     // we're removing it here.
                     $0.replacingOccurrences(of: "*", with: "")
                 }),
-                myName: self.className,
+                fileNames: Set(renderReferencedFileNames().map({ $0.replacingOccurrences(of: "*", with: "") })),
+                myClsName: className,
+                myFileName: fileName,
                 parentName: parentName)
         ] + adtRoots + enumRoots + [
             ObjCIR.Root.structDecl(name: self.dirtyPropertyOptionName,

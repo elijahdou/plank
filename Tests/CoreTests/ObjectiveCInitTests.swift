@@ -36,6 +36,7 @@ class ObjectiveCInitTests: XCTestCase {
         if let prop = propSchemaFn(properties, URL(string: "http://google.com/")!) {
 
             let schema = SchemaObjectRoot(
+                fd: "request",
                 name: "request",
                 properties: ["response_data": SchemaObjectProperty(schema: prop, nullability: .nullable)],
                 extends: nil,

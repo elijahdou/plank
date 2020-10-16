@@ -75,11 +75,19 @@ func enumTypeName(propertyName: String, className: String) -> String {
 }
 
 extension SchemaObjectRoot {
+    func fileName(params: GenerationParameters) -> String {
+        if let classPrefix = params[GenerationParameterType.classPrefix] as String? {
+            return "\(classPrefix)\(fd.snakeCaseToCamelCase())"
+        } else {
+            return fd.snakeCaseToCamelCase()
+        }
+    }
+    
     func className(with params: GenerationParameters) -> String {
         if let classPrefix = params[GenerationParameterType.classPrefix] as String? {
-            return "\(classPrefix)\(self.name.snakeCaseToCamelCase())"
+            return "\(classPrefix)\(name.snakeCaseToCamelCase())"
         } else {
-            return self.name.snakeCaseToCamelCase()
+            return name.snakeCaseToCamelCase()
         }
     }
 
@@ -282,7 +290,7 @@ public struct ObjCIR {
 
     enum Root: RootRenderer {
         case structDecl(name: String, fields: [String])
-        case imports(classNames: Set<String>, myName: String, parentName: String?)
+        case imports(classNames: Set<String>, fileNames: Set<String>, myClsName: String, myFileName: String, parentName: String?)
         case category(className: String, categoryName: String?, methods: [ObjCIR.Method],
             properties: [SimpleProperty])
         case macro(String)
@@ -304,13 +312,13 @@ public struct ObjCIR {
                 return []
             case .macro(let macro):
                 return [macro]
-            case .imports(let classNames, let myName, let parentName):
+            case .imports(let classNames, _, let myClsName, _, let parentName):
+                // 向前声明时使用类名
                 return [
                     "#import <Foundation/Foundation.h>",
                     parentName.map(ObjCIR.fileImportStmt) ?? "",
                     "#import \"\(ObjCRuntimeHeaderFile().fileName)\""
-                ].filter { $0 != "" }  + (["\(myName)Builder"] + classNames)
-                    .sorted().map { "@class \($0.trimmingCharacters(in: .whitespaces));" }
+                ].filter { $0 != "" }  + (["\(myClsName)Builder"] + classNames).map { "@class \($0.trimmingCharacters(in: .whitespaces));" }.sorted()
             case .classDecl(let className, let extends, let methods, let properties, let protocols):
                 let protocolList = protocols.keys.sorted().joined(separator: ", ")
                 let protocolDeclarations = protocols.count > 0 ? "<\(protocolList)>" : ""
@@ -361,10 +369,11 @@ public struct ObjCIR {
             case .macro:
                 // skip macro in impl
                 return []
-            case .imports(let classNames, let myName, _):
-                return [classNames.union(Set([myName]))
-                    .sorted()
+            case .imports(_, let fileNames, _, let myFileName, _):
+                // 实现文件中使用文件名去import
+                return [fileNames.union(Set([myFileName]))
                     .map { $0.trimmingCharacters(in: .whitespaces) }
+                    .sorted()
                     .map(ObjCIR.fileImportStmt)
                     .joined(separator: "\n")]
             case .classDecl(name: let className, extends: _, methods: let methods, properties: _, protocols: let protocols):

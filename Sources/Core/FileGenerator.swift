@@ -46,7 +46,8 @@ protocol FileRenderer {
     associatedtype Root: RootRenderer
     var rootSchema: SchemaObjectRoot { get }
     var params: GenerationParameters { get }
-    func typeFromSchema(_ param: String, _ schema: SchemaObjectProperty) -> String
+    func typeFromSchema(_ param: String, _ schema: SchemaObjectProperty) -> String  // 属性类型
+    func fileNameFromSchema(_ param: String, _ schema: SchemaObjectProperty) -> String // 文件名
     func renderRoots() -> [Root]
 }
 
@@ -72,6 +73,10 @@ extension SchemaObjectRoot {
 }
 
 extension FileRenderer {
+    var fileName: String {
+        return self.rootSchema.fileName(params: self.params)
+    }
+    
     var className: String {
         return self.rootSchema.className(with: self.params)
     }
@@ -101,6 +106,33 @@ extension FileRenderer {
         default:
             return nil
         }
+    }
+    
+    fileprivate func referencedFileNames(schema: Schema) -> [String] {
+        switch schema {
+        case .reference(with: let ref):
+            switch ref.force() {
+            case .some(.object(_)):
+                return [fileNameFromSchema("", schema.nonnullProperty())]
+            default:
+                fatalError("Bad reference found in schema for class: \(fileName)")
+            }
+        case .object(let schemaRoot):
+            return [schemaRoot.fileName(params: params)]
+        case .map(valueType: .some(let valueType)):
+            return referencedFileNames(schema: valueType)
+        case .array(itemType: .some(let itemType)), .set(itemType: .some(let itemType)):
+            return referencedFileNames(schema: itemType)
+        case .oneOf(types: let itemTypes):
+            return itemTypes.flatMap(referencedFileNames)
+        default:
+            return []
+        }
+    }
+    
+    func renderReferencedFileNames() -> Set<String> {
+        let fds = Set(rootSchema.properties.values.map { $0.schema }.flatMap(referencedFileNames))
+        return fds
     }
 
     fileprivate func referencedClassNames(schema: Schema) -> [String] {

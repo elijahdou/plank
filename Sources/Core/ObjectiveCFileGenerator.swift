@@ -12,12 +12,10 @@ import Foundation
 
 struct ObjectiveCFileGenerator: FileGeneratorManager {
     static func filesToGenerate(descriptor: SchemaObjectRoot, generatorParameters: GenerationParameters) -> [FileGenerator] {
-
         let rootsRenderer = ObjCModelRenderer(rootSchema: descriptor, params: generatorParameters)
-
         return [
-            ObjCHeaderFile(roots: rootsRenderer.renderRoots(), className: rootsRenderer.className),
-            ObjCImplementationFile(roots: rootsRenderer.renderRoots(), className: rootsRenderer.className)
+            ObjCHeaderFile(roots: rootsRenderer.renderRoots(), className: rootsRenderer.className, fd: rootsRenderer.fileName),
+            ObjCImplementationFile(roots: rootsRenderer.renderRoots(), className: rootsRenderer.className, fd: rootsRenderer.fileName)
         ]
     }
 
@@ -34,10 +32,10 @@ fileprivate extension FileGenerator {
 
 struct ObjCHeaderFile: FileGenerator {
     let roots: [ObjCIR.Root]
-    let className: String
-
+    let className: String // 类名
+    let fd: String       // 文件名
     var fileName: String {
-        return "\(className).h"
+        return "\(fd).h"
     }
 
     var indent: Int {
@@ -59,9 +57,9 @@ struct ObjCHeaderFile: FileGenerator {
 struct ObjCImplementationFile: FileGenerator {
     let roots: [ObjCIR.Root]
     let className: String
-
+    let fd: String
     var fileName: String {
-        return "\(className).m"
+        return "\(fd).m"
     }
 
     var indent: Int {

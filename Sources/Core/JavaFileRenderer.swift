@@ -48,6 +48,11 @@ extension JavaFileRenderer {
             return "@Nullable \(unwrappedTypeFromSchema(param, schema.schema))"
         }
     }
+    
+    func fileNameFromSchema(_ param: String, _ schema: SchemaObjectProperty) -> String {
+        return ""
+    }
+    
     fileprivate func unwrappedTypeFromSchema(_ param: String, _ schema: Schema) -> String {
         switch schema {
         case .array(itemType: .none):

@@ -131,7 +131,8 @@ extension Schema {
 }
 
 public struct SchemaObjectRoot: Equatable {
-    let name: String
+    let fd: String // 文件名
+    let name: String // 类名
     let properties: [String: SchemaObjectProperty]
     let extends: URLSchemaReference?
     let algebraicTypeIdentifier: String?
@@ -291,7 +292,7 @@ extension Schema {
                     // Class
                     let optTuples: [Property?] = propMap.map { (key, value) -> (String, Schema?) in
                         let schemaOpt = (value as? JSONObject).flatMap {
-                                propertyForType(propertyInfo: $0, source: source)
+                            propertyForType(propertyInfo: $0, source: source)
                         }
                         return (key, schemaOpt)
                         }.map { (name, optSchema) in optSchema.map {
@@ -311,7 +312,10 @@ extension Schema {
                             loader.loadSchema(refUrl) })
                             }
                         }
-                    return lifted.map { Schema.object(SchemaObjectRoot(name: objectTitle,
+                    var fd: String = propertyInfo["id"] as? String ?? ""
+                    fd = (fd as NSString).deletingPathExtension as String
+                    return lifted.map { Schema.object(SchemaObjectRoot(fd: fd,
+                                                                       name: objectTitle,
                                                                        properties: Dictionary(elements: $0),
                                                                        extends: extends,
                                                                        algebraicTypeIdentifier: propertyInfo["algebraicDataTypeIdentifier"] as? String)) }

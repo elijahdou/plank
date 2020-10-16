@@ -63,4 +63,8 @@ extension JSFileRenderer {
             return JSModelRenderer.adtVariantTypeName(className: className, property: param)
         }
     }
+    
+    func fileNameFromSchema(_ param: String, _ schema: SchemaObjectProperty) -> String {
+        return ""
+    }
 }
